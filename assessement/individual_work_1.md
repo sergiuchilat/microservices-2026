@@ -8,15 +8,15 @@ The objective of this project is to apply the architectural principles discussed
 ### 2. Choose Your Domain (Pick one):
 Choose **one** of the following scenarios to design. Each has unique challenges regarding data consistency, latency, and scaling.
 
-1.  **Food Delivery Platform** (e.g., UberEats) – *Challenge: Real-time coordination between restaurants, couriers, and customers.*
-2.  **Ride-Sharing Service** (e.g., Uber/Bolt) – *Challenge: High-frequency GPS updates and dynamic surge pricing.*
-3.  **E-Learning System** (e.g., Udemy/Coursera) – *Challenge: Video streaming delivery and student progress tracking.*
+1.  **Food Delivery Platform(Antonina)** (e.g., UberEats) – *Challenge: Real-time coordination between restaurants, couriers, and customers.*
+2.  **Ride-Sharing Service(Nichita)** (e.g., Uber/Bolt) – *Challenge: High-frequency GPS updates and dynamic surge pricing.*
+3.  **E-Learning System(Andrei)** (e.g., Udemy/Coursera) – *Challenge: Video streaming delivery and student progress tracking.*
 4.  **FinTech / Digital Wallet** (e.g., Revolut) – *Challenge: Security, transaction integrity (ACID), and audit logs.*
-5.  **Streaming Service** (e.g., Netflix/Spotify) – *Challenge: Mass-scale content distribution and recommendation engines.*
-6.  **E-Commerce Marketplace** (e.g., Amazon) – *Challenge: Complex inventory management and diverse checkout flows.*
-7.  **Smart Home / IoT Dashboard** (e.g., Google Home) – *Challenge: Handling thousands of concurrent device signals and events.*
-8.  **Healthcare Patient Management** (e.g., Zocdoc) – *Challenge: Balancing strict data privacy (GDPR) with instant record access.*
-9.  **Social Media Platform** (e.g., Instagram/X) – *Challenge: Feed generation (Fan-out) and instant social notifications.*
+5.  **Streaming Service(Ghenadie)** (e.g., Netflix/Spotify) – *Challenge: Mass-scale content distribution and recommendation engines.*
+6.  **E-Commerce Marketplace(Adrian)** (e.g., Amazon) – *Challenge: Complex inventory management and diverse checkout flows.*
+7.  **Smart Home / IoT Dashboard(Radion)** (e.g., Google Home) – *Challenge: Handling thousands of concurrent device signals and events.*
+8.  **Healthcare Patient Management(Maxim)** (e.g., Zocdoc) – *Challenge: Balancing strict data privacy (GDPR) with instant record access.*
+9.  **Social Media Platform(Eduard)** (e.g., Instagram/X) – *Challenge: Feed generation (Fan-out) and instant social notifications.*
 10. **Online Betting / Gaming Platform** – *Challenge: Extreme low-latency for live odds and high-speed transactions.*
 
 ---
