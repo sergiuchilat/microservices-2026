@@ -1,0 +1,39 @@
+services:
+  # 1. Brokerul de mesaje
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"   # Portul pentru comunicare
+      - "15672:15672" # Portul pentru interfața web (Dashboard)
+    networks:
+      - nest-network
+
+  # 2. Serviciul Producer (API)
+  producer:
+    build:
+      context: ./producer-api
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - rabbitmq
+    environment:
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    networks:
+      - nest-network
+
+  # 3. Serviciul Consumer (Worker)
+  consumer:
+    build:
+      context: ./consumer-worker
+      dockerfile: Dockerfile
+    depends_on:
+      - rabbitmq
+    environment:
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    networks:
+      - nest-network
+
+networks:
+  nest-network:
+    driver: bridge
