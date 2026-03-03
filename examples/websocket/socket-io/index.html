@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket.io Chat - Frontend Separat</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 10px;
+        }
+
+        #chat-container { 
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            max-height: 720px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        /* Header */
+        #header {
+            background: white;
+            color: #000;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        #header-left { display: flex; align-items: center; gap: 12px; }
+        #header-title { font-weight: 700; font-size: 1.05em; }
+        #header-status { font-size: 0.75em; color: #65676b; }
+        #header-right { display: flex; gap: 16px; }
+        #header-right i { cursor: pointer; color: #0a66c2; font-size: 1.1em; }
+        #header-right i:hover { opacity: 0.8; }
+
+        /* Chat window */
+        #chat-window { 
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: white;
+        }
+
+        /* Scrollbar styling */
+        #chat-window::-webkit-scrollbar { width: 8px; }
+        #chat-window::-webkit-scrollbar-track { background: transparent; }
+        #chat-window::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+        #chat-window::-webkit-scrollbar-thumb:hover { background: #999; }
+
+        /* Message styling */
+        .msg-group {
+            display: flex;
+            margin-bottom: 2px;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .msg-group.my-msg-group {
+            justify-content: flex-end;
+        }
+
+        .msg-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75em;
+            color: white;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .msg {
+            max-width: 60%;
+            word-wrap: break-word;
+            padding: 8px 12px;
+            border-radius: 18px;
+            font-size: 0.95em;
+            line-height: 1.4;
+        }
+
+        .my-msg { 
+            background: #0a66c2;
+            color: white;
+            border-radius: 18px 4px 18px 18px;
+        }
+
+        .other-msg { 
+            background: #e5e7eb;
+            color: #000;
+            border-radius: 18px 18px 4px 18px;
+        }
+
+        .msg-time {
+            font-size: 0.7em;
+            color: #65676b;
+            margin-top: 2px;
+            padding: 0 4px;
+        }
+
+        .system-msg { 
+            font-size: 0.8em;
+            color: #65676b;
+            text-align: center;
+            padding: 8px 16px;
+            background: #f0f2f5;
+            border-radius: 12px;
+            align-self: center;
+        }
+
+        /* Typing indicator */
+        #typing-status { 
+            padding: 8px 16px;
+            font-size: 0.8em;
+            color: #65676b;
+            font-weight: 500;
+            min-height: 20px;
+        }
+
+        /* Input area */
+        #input-area { 
+            display: flex;
+            padding: 12px 16px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            gap: 8px;
+            align-items: flex-end;
+        }
+
+        #userInput { 
+            flex: 1;
+            padding: 10px 16px;
+            border: 1px solid #ccc;
+            border-radius: 24px;
+            background: #f0f2f5;
+            color: #000;
+            outline: none;
+            font-size: 0.95em;
+            font-family: inherit;
+            resize: none;
+            max-height: 100px;
+        }
+
+        #userInput:focus {
+            border-color: #0a66c2;
+            background: white;
+        }
+
+        #userInput::placeholder {
+            color: #65676b;
+        }
+
+        #sendBtn {
+            background: none;
+            border: none;
+            color: #0a66c2;
+            font-size: 1.2em;
+            cursor: pointer;
+            padding: 4px 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        #sendBtn:hover {
+            transform: scale(1.1);
+        }
+
+        #sendBtn:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="chat-container">
+        <!-- Header -->
+        <div id="header">
+            <div id="header-left">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #0a66c2 0%, #0084ff 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.1em;">m</div>
+                <div>
+                    <div id="header-title">Chat Global</div>
+                    <div id="header-status">Online</div>
+                </div>
+            </div>
+            <div id="header-right">
+                <i class="fas fa-search"></i>
+                <i class="fas fa-info-circle"></i>
+            </div>
+        </div>
+        
+        <!-- Chat window -->
+        <div id="chat-window"></div>
+
+        <!-- Typing status -->
+        <div id="typing-status"></div>
+
+        <!-- Input area -->
+        <div id="input-area">
+            <input type="text" id="userInput" placeholder="Mesaj..." autocomplete="off">
+            <button id="sendBtn"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <script>
+        const socket = io('http://localhost:3000');
+
+        const chatWindow = document.getElementById('chat-window');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const typingStatus = document.getElementById('typing-status');
+
+        // Genereaza culori pseudo-aleatoare pentru avatare
+        function getColorFromId(id) {
+            const colors = ['#0a66c2', '#e1306c', '#f77737', '#fcaf45', '#833ab4', '#405de6'];
+            let hash = 0;
+            for (let i = 0; i < id.length; i++) {
+                hash = id.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return colors[Math.abs(hash) % colors.length];
+        }
+
+        // Funcție pentru adăugarea mesajelor în UI
+        function appendMessage(text, className, userId = 'Me') {
+            const msgGroup = document.createElement('div');
+            msgGroup.className = `msg-group ${className === 'my-msg' ? 'my-msg-group' : ''}`;
+            
+            if (className !== 'my-msg' && className !== 'system-msg') {
+                const avatar = document.createElement('div');
+                avatar.className = 'msg-avatar';
+                avatar.style.background = getColorFromId(userId);
+                avatar.textContent = userId.charAt(0).toUpperCase();
+                msgGroup.appendChild(avatar);
+            }
+            
+            const msg = document.createElement('div');
+            msg.className = `msg ${className}`;
+            msg.textContent = className === 'system-msg' ? text : (className === 'other-msg' ? `${userId}: ${text}` : text);
+            
+            const time = document.createElement('div');
+            time.className = 'msg-time';
+            time.textContent = new Date().toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
+            
+            if (className === 'system-msg') {
+                msgGroup.appendChild(msg);
+            } else {
+                msgGroup.appendChild(msg);
+                msgGroup.appendChild(time);
+            }
+            
+            chatWindow.appendChild(msgGroup);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        // Trimiterea mesajului (click pe buton)
+        sendBtn.addEventListener('click', () => {
+            const message = userInput.value.trim();
+            if (message) {
+                socket.emit('message_from_client', message);
+                appendMessage(message, 'my-msg');
+                userInput.value = '';
+                userInput.focus();
+            }
+        });
+
+        // Trimiterea mesajului la tasta ENTER
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendBtn.click();
+            } else {
+                socket.emit('typing', 'Cineva scrie...');
+            }
+        });
+
+        // Ascultăm mesaje de la server
+        socket.on('message_from_server', (data) => {
+            appendMessage(data.text, 'other-msg', data.id);
+        });
+
+        // Ascultăm indicatorul de "typing"
+        let typingTimeout;
+        socket.on('display_typing', (text) => {
+            typingStatus.textContent = text;
+            
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                typingStatus.textContent = '';
+            }, 2000);
+        });
+
+        // Verificăm dacă suntem conectați
+        socket.on('connect', () => {
+            appendMessage('Conectat la server!', 'system-msg');
+        });
+    </script>
+</body>
+</html>
