@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Chat Real-Time</title>
+    <style>
+        /* Design rapid și curat */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; display: flex; flex-direction: column; align-items: center; height: 100vh; margin: 0; }
+        #chat-container { width: 90%; max-width: 450px; background: white; margin-top: 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; height: 80vh; }
+        #status { padding: 5px; text-align: center; font-size: 0.8em; color: white; background: #6c757d; }
+        #status.online { background: #28a745; }
+        #status.offline { background: #dc3545; }
+        #messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 10px 15px; border-radius: 18px; max-width: 80%; word-wrap: break-word; font-size: 0.95em; }
+        .msg.me { align-self: flex-end; background-color: #0084ff; color: white; border-bottom-right-radius: 2px; }
+        .msg.others { align-self: flex-start; background-color: #e4e6eb; color: #050505; border-bottom-left-radius: 2px; }
+        .msg.system { align-self: center; background: none; color: #888; font-size: 0.8em; font-style: italic; }
+        #input-area { display: flex; padding: 15px; border-top: 1px solid #ddd; gap: 10px; }
+        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 20px; outline: none; }
+        button { background: #0084ff; color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0073e6; }
+    </style>
+</head>
+<body>
+
+    <div id="chat-container">
+        <div id="status">Se conectează...</div>
+        <div id="messages">
+            </div>
+        <div id="input-area">
+            <input type="text" id="msgInput" placeholder="Scrie un mesaj..." autocomplete="off">
+            <button id="sendBtn">Trimite</button>
+        </div>
+    </div>
+
+    <script>
+        const status = document.getElementById('status');
+        const messagesDiv = document.getElementById('messages');
+        const msgInput = document.getElementById('msgInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        // 1. Inițiem conexiunea către serverul nostru Node.js
+        const socket = new WebSocket('ws://localhost:8080');
+
+        // 2. Eveniment: Conexiune deschisă
+        socket.onopen = () => {
+            status.textContent = "Online - Conectat la Server";
+            status.className = "online";
+            addMessage("Te-ai conectat la chat!", "system");
+        };
+
+        // 3. Eveniment: Primire mesaj de la server
+        socket.onmessage = (event) => {
+            // Mesajele primite de la alții
+            console.log("Mesaj primit:", event);
+            addMessage(event.data, "others");
+        };
+
+        // 4. Eveniment: Închidere conexiune
+        socket.onclose = () => {
+            status.textContent = "Offline - Conexiune pierdută";
+            status.className = "offline";
+            addMessage("Conexiunea cu serverul a fost întreruptă.", "system");
+        };
+
+        // 5. Eveniment: Eroare
+        socket.onerror = (error) => {
+            console.error("Eroare WebSocket:", error);
+        };
+
+        // Funcția de trimitere mesaj
+        function sendMessage() {
+            const text = msgInput.value.trim();
+            if (text && socket.readyState === WebSocket.OPEN) {
+                socket.send(text);      // Trimitem la server
+                addMessage(text, "me"); // Afișăm în fereastra noastră
+                msgInput.value = "";    // Resetăm input-ul
+            }
+        }
+
+        // Funcție pentru a adăuga bulele de chat în interfață
+        function addMessage(text, type) {
+            const msgEl = document.createElement('div');
+            msgEl.classList.add('msg', type);
+            msgEl.textContent = text;
+            messagesDiv.appendChild(msgEl);
+            
+            // Scroll automat la ultimul mesaj
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // Ascultăm click-ul pe buton și tasta Enter
+        sendBtn.onclick = sendMessage;
+        msgInput.onkeydown = (e) => { if(e.key === 'Enter') sendMessage(); };
+    </script>
+</body>
+</html>
